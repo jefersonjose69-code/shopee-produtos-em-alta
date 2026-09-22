@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopee Produtos em Alta</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    header {
+      background: #ee4d2d;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ee4d2d;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🔥 Produtos em Alta</h1>
+  <p>Pesquisa para afiliados Shopee</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>🚀 Painel do Afiliado</h2>
+
+    <button onclick="verificarServidor()">
+      VERIFICAR SERVIDOR
+    </button>
+
+    <div id="status">
+      Aguardando...
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Produtos</h2>
+    <p>Em breve vamos colocar aqui os produtos encontrados.</p>
+  </div>
+
+</div>
+
+<script>
+
+async function verificarServidor() {
+
+  const status = document.getElementById("status");
+
+  status.innerHTML = "⏳ Verificando...";
+
+  try {
+
+    const resposta = await fetch("/api/status");
+
+    const dados = await resposta.json();
+
+    if (dados.online) {
+      status.innerHTML = "🟢 Servidor online!";
+    } else {
+      status.innerHTML = "🔴 Servidor offline";
+    }
+
+  } catch (erro) {
+
+    status.innerHTML = "🔴 Não foi possível conectar ao servidor.";
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
