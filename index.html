@@ -35,11 +35,16 @@
       padding: 0 20px;
     }
 
-    .painel {
+    .painel,
+    .produtos {
       background: white;
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .painel {
       text-align: center;
     }
 
@@ -47,29 +52,34 @@
       background: #ee4d2d;
       color: white;
       border: none;
-      padding: 14px 25px;
+      padding: 14px 20px;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin-top: 15px;
-    }
-
-    button:hover {
-      opacity: 0.9;
+      margin: 8px 4px;
     }
 
     #status {
-      margin-top: 20px;
+      margin-top: 15px;
       font-size: 18px;
       font-weight: bold;
     }
 
-    .produtos {
-      margin-top: 25px;
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    .produto {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 12px;
+    }
+
+    .produto h3 {
+      margin-top: 0;
+    }
+
+    .preco {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ee4d2d;
     }
   </style>
 </head>
@@ -84,26 +94,28 @@
   <main>
 
     <div class="painel">
-
       <h2>🚀 Painel do Afiliado</h2>
 
       <button onclick="verificarServidor()">
         VERIFICAR SERVIDOR
       </button>
 
+      <button onclick="carregarProdutos()">
+        📊 CARREGAR PRODUTOS
+      </button>
+
       <div id="status">
         Aguardando...
       </div>
-
     </div>
 
     <div class="produtos">
 
       <h2>📊 Produtos</h2>
 
-      <p>
-        Em breve vamos colocar aqui os produtos encontrados.
-      </p>
+      <div id="listaProdutos">
+        Nenhum produto carregado ainda.
+      </div>
 
     </div>
 
@@ -122,26 +134,72 @@
         const resposta = await fetch("/api/status");
 
         if (!resposta.ok) {
-          throw new Error("Servidor não respondeu corretamente");
+          throw new Error("Servidor não respondeu");
         }
 
         const dados = await resposta.json();
 
         if (dados.sucesso === true) {
-
           status.innerHTML = "🟢 Servidor online";
-
         } else {
-
           status.innerHTML = "🔴 Servidor offline";
-
         }
 
       } catch (erro) {
 
-        console.error(erro);
-
         status.innerHTML = "🔴 Servidor offline";
+
+      }
+
+    }
+
+    async function carregarProdutos() {
+
+      const lista = document.getElementById("listaProdutos");
+
+      lista.innerHTML = "🟡 Carregando produtos...";
+
+      try {
+
+        const resposta = await fetch("/api/produtos");
+
+        if (!resposta.ok) {
+          throw new Error("Erro ao buscar produtos");
+        }
+
+        const dados = await resposta.json();
+
+        lista.innerHTML = "";
+
+        if (!dados.produtos || dados.produtos.length === 0) {
+
+          lista.innerHTML = "Nenhum produto encontrado.";
+
+          return;
+        }
+
+        dados.produtos.forEach(produto => {
+
+          const item = document.createElement("div");
+
+          item.className = "produto";
+
+          item.innerHTML = `
+            <h3>${produto.nome}</h3>
+            <p>Categoria: ${produto.categoria}</p>
+            <p class="preco">
+              R$ ${produto.preco.toFixed(2).replace(".", ",")}
+            </p>
+          `;
+
+          lista.appendChild(item);
+
+        });
+
+      } catch (erro) {
+
+        lista.innerHTML =
+          "🔴 Não foi possível carregar os produtos.";
 
       }
 
