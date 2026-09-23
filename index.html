@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shopee Produtos em Alta</title>
+
+  <title>Produtos em Alta</title>
 
   <style>
     body {
@@ -20,87 +21,133 @@
       text-align: center;
     }
 
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
+    header h1 {
+      margin: 0 0 8px;
     }
 
-    .card {
+    header p {
+      margin: 0;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .painel {
       background: white;
+      padding: 25px;
       border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      text-align: center;
     }
 
     button {
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 10px;
       background: #ee4d2d;
       color: white;
+      border: none;
+      padding: 14px 25px;
+      border-radius: 8px;
       font-size: 16px;
-      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      opacity: 0.9;
     }
 
     #status {
-      margin-top: 15px;
+      margin-top: 20px;
+      font-size: 18px;
       font-weight: bold;
+    }
+
+    .produtos {
+      margin-top: 25px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h1>🔥 Produtos em Alta</h1>
-  <p>Pesquisa para afiliados Shopee</p>
-</header>
+  <header>
+    <h1>🔥 Produtos em Alta</h1>
+    <p>Pesquisa para afiliados Shopee</p>
+  </header>
 
-<div class="container">
+  <main>
 
-  <div class="card">
-    <h2>🚀 Painel do Afiliado</h2>
+    <div class="painel">
 
-    <button onclick="verificarServidor()">
-      VERIFICAR SERVIDOR
-    </button>
+      <h2>🚀 Painel do Afiliado</h2>
 
-    <div id="status">
-      Aguardando...
+      <button onclick="verificarServidor()">
+        VERIFICAR SERVIDOR
+      </button>
+
+      <div id="status">
+        Aguardando...
+      </div>
+
     </div>
-  </div>
 
-  <div class="card">
-    <h2>📊 Produtos</h2>
-    <p>Em breve vamos colocar aqui os produtos encontrados.</p>
-  </div>
+    <div class="produtos">
 
-</div>
+      <h2>📊 Produtos</h2>
 
-<script>
-async function verificarServidor() {
-  const status = document.getElementById("status");
+      <p>
+        Em breve vamos colocar aqui os produtos encontrados.
+      </p>
 
-  status.innerHTML = "⏳ Verificando...";
+    </div>
 
-  try {
-    const resposta = await fetch("/api/status");
-    const dados = await resposta.json();
+  </main>
 
-    if (dados.online) {
-      status.innerHTML = "🟢 Servidor online!";
-    } else {
-      status.innerHTML = "🔴 Servidor offline";
+  <script>
+
+    async function verificarServidor() {
+
+      const status = document.getElementById("status");
+
+      status.innerHTML = "🟡 Verificando servidor...";
+
+      try {
+
+        const resposta = await fetch("/api/status");
+
+        if (!resposta.ok) {
+          throw new Error("Servidor não respondeu corretamente");
+        }
+
+        const dados = await resposta.json();
+
+        if (dados.sucesso === true) {
+
+          status.innerHTML = "🟢 Servidor online";
+
+        } else {
+
+          status.innerHTML = "🔴 Servidor offline";
+
+        }
+
+      } catch (erro) {
+
+        console.error(erro);
+
+        status.innerHTML = "🔴 Servidor offline";
+
+      }
+
     }
 
-  } catch (erro) {
-    status.innerHTML = "🔴 Não foi possível conectar ao servidor.";
-  }
-}
-</script>
+  </script>
 
 </body>
 </html>
