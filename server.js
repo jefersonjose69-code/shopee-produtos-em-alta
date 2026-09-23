@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -7,38 +8,74 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-let produtos = [
-  {
-    id: 1,
-    nome: "Organizador de Gavetas MDF",
-    preco: 51.90,
-    categoria: "Casa",
-    link: "",
-    imagem: "",
-    comissao: 0,
-    destaque: true
-  },
-  {
-    id: 2,
-    nome: "Fone Bluetooth",
-    preco: 39.90,
-    categoria: "Eletrônicos",
-    link: "",
-    imagem: "",
-    comissao: 0,
-    destaque: true
-  },
-  {
-    id: 3,
-    nome: "Suporte para Celular",
-    preco: 19.90,
-    categoria: "Acessórios",
-    link: "",
-    imagem: "",
-    comissao: 0,
-    destaque: true
-  }
-];
+const db = new sqlite3.Database("./produtos.db");
+
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS produtos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      preco REAL NOT NULL,
+      categoria TEXT DEFAULT 'Outros',
+      link TEXT DEFAULT '',
+      imagem TEXT DEFAULT '',
+      comissao REAL DEFAULT 0,
+      destaque INTEGER DEFAULT 0
+    )
+  `);
+
+  db.get("SELECT COUNT(*) AS total FROM produtos", (erro, resultado) => {
+    if (erro) {
+      console.error("Erro ao verificar produtos:", erro);
+      return;
+    }
+
+    if (resultado.total === 0) {
+      const produtosIniciais = [
+        [
+          "Organizador de Gavetas MDF",
+          51.90,
+          "Casa",
+          "",
+          "",
+          0,
+          1
+        ],
+        [
+          "Fone Bluetooth",
+          39.90,
+          "Eletrônicos",
+          "",
+          "",
+          0,
+          1
+        ],
+        [
+          "Suporte para Celular",
+          19.90,
+          "Acessórios",
+          "",
+          "",
+          0,
+          1
+        ]
+      ];
+
+      const inserir = db.prepare(`
+        INSERT INTO produtos
+        (nome, preco, categoria, link, imagem, comissao, destaque)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      produtosIniciais.forEach(produto => {
+        inserir.run(produto);
+      });
+
+      inserir.finalize();
+    }
+  });
+});
+
 
 app.get("/api/status", (req, res) => {
   res.json({
@@ -48,13 +85,32 @@ app.get("/api/status", (req, res) => {
   });
 });
 
+
 app.get("/api/produtos", (req, res) => {
-  res.json({
-    sucesso: true,
-    total: produtos.length,
-    produtos
-  });
+
+  db.all(
+    "SELECT * FROM produtos ORDER BY id DESC",
+    [],
+    (erro, produtos) => {
+
+      if (erro) {
+        console.error(erro);
+
+        return res.status(500).json({
+          sucesso: false,
+          mensagem: "Erro ao carregar produtos."
+        });
+      }
+
+      res.json({
+        sucesso: true,
+        total: produtos.length,
+        produtos
+      });
+    }
+  );
 });
+
 
 app.post("/api/produtos", (req, res) => {
 
@@ -75,50 +131,91 @@ app.post("/api/produtos", (req, res) => {
     });
   }
 
-  const novoProduto = {
-    id: Date.now(),
-    nome: nome,
-    preco: Number(preco),
-    categoria: categoria || "Outros",
-    link: link || "",
-    imagem: imagem || "",
-    comissao: Number(comissao || 0),
-    destaque: Boolean(destaque)
-  };
+  const sql = `
+    INSERT INTO produtos
+    (nome, preco, categoria, link, imagem, comissao, destaque)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  produtos.push(novoProduto);
+  db.run(
+    sql,
+    [
+      nome,
+      Number(preco),
+      categoria || "Outros",
+      link || "",
+      imagem || "",
+      Number(comissao || 0),
+      destaque ? 1 : 0
+    ],
+    function (erro) {
 
-  res.status(201).json({
-    sucesso: true,
-    mensagem: "Produto adicionado com sucesso.",
-    produto: novoProduto
-  });
+      if (erro) {
+        console.error(erro);
+
+        return res.status(500).json({
+          sucesso: false,
+          mensagem: "Erro ao adicionar produto."
+        });
+      }
+
+      res.status(201).json({
+        sucesso: true,
+        mensagem: "Produto adicionado com sucesso.",
+        produto: {
+          id: this.lastID,
+          nome,
+          preco: Number(preco),
+          categoria: categoria || "Outros",
+          link: link || "",
+          imagem: imagem || "",
+          comissao: Number(comissao || 0),
+          destaque: Boolean(destaque)
+        }
+      });
+    }
+  );
 });
+
 
 app.delete("/api/produtos/:id", (req, res) => {
 
   const id = Number(req.params.id);
 
-  const quantidadeAntes = produtos.length;
+  db.run(
+    "DELETE FROM produtos WHERE id = ?",
+    [id],
+    function (erro) {
 
-  produtos = produtos.filter(produto => produto.id !== id);
+      if (erro) {
+        console.error(erro);
 
-  if (produtos.length === quantidadeAntes) {
-    return res.status(404).json({
-      sucesso: false,
-      mensagem: "Produto não encontrado."
-    });
-  }
+        return res.status(500).json({
+          sucesso: false,
+          mensagem: "Erro ao excluir produto."
+        });
+      }
 
-  res.json({
-    sucesso: true,
-    mensagem: "Produto excluído com sucesso."
-  });
+      if (this.changes === 0) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: "Produto não encontrado."
+        });
+      }
+
+      res.json({
+        sucesso: true,
+        mensagem: "Produto excluído com sucesso."
+      });
+    }
+  );
 });
+
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
+
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${PORT}`);
