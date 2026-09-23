@@ -14,6 +14,7 @@ let produtos = [
     preco: 51.90,
     categoria: "Casa",
     link: "",
+    imagem: "",
     comissao: 0,
     destaque: true
   },
@@ -23,6 +24,7 @@ let produtos = [
     preco: 39.90,
     categoria: "Eletrônicos",
     link: "",
+    imagem: "",
     comissao: 0,
     destaque: true
   },
@@ -32,6 +34,7 @@ let produtos = [
     preco: 19.90,
     categoria: "Acessórios",
     link: "",
+    imagem: "",
     comissao: 0,
     destaque: true
   }
@@ -60,6 +63,7 @@ app.post("/api/produtos", (req, res) => {
     preco,
     categoria,
     link,
+    imagem,
     comissao,
     destaque
   } = req.body;
@@ -77,6 +81,7 @@ app.post("/api/produtos", (req, res) => {
     preco: Number(preco),
     categoria: categoria || "Outros",
     link: link || "",
+    imagem: imagem || "",
     comissao: Number(comissao || 0),
     destaque: Boolean(destaque)
   };
