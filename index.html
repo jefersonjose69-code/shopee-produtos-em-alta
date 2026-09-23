@@ -31,14 +31,15 @@
 
     main {
       max-width: 700px;
-      margin: 30px auto;
-      padding: 0 20px;
+      margin: 25px auto;
+      padding: 0 15px;
     }
 
     .painel,
+    .cadastro,
     .produtos {
       background: white;
-      padding: 25px;
+      padding: 20px;
       border-radius: 15px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.1);
       margin-bottom: 20px;
@@ -48,20 +49,35 @@
       text-align: center;
     }
 
+    input,
+    select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      margin: 7px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
     button {
       background: #ee4d2d;
       color: white;
       border: none;
-      padding: 14px 20px;
+      padding: 13px 18px;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin: 8px 4px;
+      margin: 6px 3px;
+    }
+
+    button.excluir {
+      background: #d32f2f;
+      font-size: 14px;
     }
 
     #status {
-      margin-top: 15px;
-      font-size: 18px;
+      margin-top: 12px;
       font-weight: bold;
     }
 
@@ -81,131 +97,318 @@
       font-weight: bold;
       color: #ee4d2d;
     }
+
+    .comissao {
+      color: #555;
+    }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>🔥 Produtos em Alta</h1>
-    <p>Pesquisa para afiliados Shopee</p>
-  </header>
+<header>
+  <h1>🔥 Produtos em Alta</h1>
+  <p>Pesquisa para afiliados Shopee</p>
+</header>
 
-  <main>
+<main>
 
-    <div class="painel">
-      <h2>🚀 Painel do Afiliado</h2>
+  <div class="painel">
 
-      <button onclick="verificarServidor()">
-        VERIFICAR SERVIDOR
-      </button>
+    <h2>🚀 Painel do Afiliado</h2>
 
-      <button onclick="carregarProdutos()">
-        📊 CARREGAR PRODUTOS
-      </button>
+    <button onclick="verificarServidor()">
+      VERIFICAR SERVIDOR
+    </button>
 
-      <div id="status">
-        Aguardando...
-      </div>
+    <div id="status">
+      Aguardando...
     </div>
 
-    <div class="produtos">
+  </div>
 
-      <h2>📊 Produtos</h2>
 
-      <div id="listaProdutos">
-        Nenhum produto carregado ainda.
-      </div>
+  <div class="cadastro">
 
+    <h2>➕ Adicionar Produto</h2>
+
+    <input
+      id="nome"
+      type="text"
+      placeholder="Nome do produto"
+    >
+
+    <input
+      id="preco"
+      type="number"
+      step="0.01"
+      placeholder="Preço"
+    >
+
+    <input
+      id="categoria"
+      type="text"
+      placeholder="Categoria"
+    >
+
+    <input
+      id="link"
+      type="url"
+      placeholder="Link da Shopee"
+    >
+
+    <input
+      id="comissao"
+      type="number"
+      step="0.01"
+      placeholder="Comissão (%)"
+    >
+
+    <button onclick="adicionarProduto()">
+      ➕ ADICIONAR PRODUTO
+    </button>
+
+  </div>
+
+
+  <div class="produtos">
+
+    <h2>📊 Produtos cadastrados</h2>
+
+    <div id="listaProdutos">
+      Carregando produtos...
     </div>
 
-  </main>
+  </div>
 
-  <script>
+</main>
 
-    async function verificarServidor() {
 
-      const status = document.getElementById("status");
+<script>
 
-      status.innerHTML = "🟡 Verificando servidor...";
+async function verificarServidor() {
 
-      try {
+  const status = document.getElementById("status");
 
-        const resposta = await fetch("/api/status");
+  status.innerHTML = "🟡 Verificando...";
 
-        if (!resposta.ok) {
-          throw new Error("Servidor não respondeu");
-        }
+  try {
 
-        const dados = await resposta.json();
+    const resposta = await fetch("/api/status");
 
-        if (dados.sucesso === true) {
-          status.innerHTML = "🟢 Servidor online";
-        } else {
-          status.innerHTML = "🔴 Servidor offline";
-        }
-
-      } catch (erro) {
-
-        status.innerHTML = "🔴 Servidor offline";
-
-      }
-
+    if (!resposta.ok) {
+      throw new Error();
     }
 
-    async function carregarProdutos() {
+    const dados = await resposta.json();
 
-      const lista = document.getElementById("listaProdutos");
-
-      lista.innerHTML = "🟡 Carregando produtos...";
-
-      try {
-
-        const resposta = await fetch("/api/produtos");
-
-        if (!resposta.ok) {
-          throw new Error("Erro ao buscar produtos");
-        }
-
-        const dados = await resposta.json();
-
-        lista.innerHTML = "";
-
-        if (!dados.produtos || dados.produtos.length === 0) {
-
-          lista.innerHTML = "Nenhum produto encontrado.";
-
-          return;
-        }
-
-        dados.produtos.forEach(produto => {
-
-          const item = document.createElement("div");
-
-          item.className = "produto";
-
-          item.innerHTML = `
-            <h3>${produto.nome}</h3>
-            <p>Categoria: ${produto.categoria}</p>
-            <p class="preco">
-              R$ ${produto.preco.toFixed(2).replace(".", ",")}
-            </p>
-          `;
-
-          lista.appendChild(item);
-
-        });
-
-      } catch (erro) {
-
-        lista.innerHTML =
-          "🔴 Não foi possível carregar os produtos.";
-
-      }
-
+    if (dados.sucesso) {
+      status.innerHTML = "🟢 Servidor online";
+    } else {
+      status.innerHTML = "🔴 Servidor offline";
     }
 
-  </script>
+  } catch (erro) {
+
+    status.innerHTML = "🔴 Servidor offline";
+
+  }
+}
+
+
+async function carregarProdutos() {
+
+  const lista = document.getElementById("listaProdutos");
+
+  lista.innerHTML = "🟡 Carregando...";
+
+  try {
+
+    const resposta = await fetch("/api/produtos");
+
+    if (!resposta.ok) {
+      throw new Error();
+    }
+
+    const dados = await resposta.json();
+
+    lista.innerHTML = "";
+
+    if (!dados.produtos || dados.produtos.length === 0) {
+
+      lista.innerHTML = "Nenhum produto cadastrado.";
+
+      return;
+    }
+
+    dados.produtos.forEach(produto => {
+
+      const item = document.createElement("div");
+
+      item.className = "produto";
+
+      item.innerHTML = `
+        <h3>${produto.nome}</h3>
+
+        <p>Categoria: ${produto.categoria}</p>
+
+        <p class="preco">
+          R$ ${Number(produto.preco)
+            .toFixed(2)
+            .replace(".", ",")}
+        </p>
+
+        <p class="comissao">
+          Comissão: ${Number(produto.comissao)
+            .toFixed(2)
+            .replace(".", ",")}%
+        </p>
+
+        ${
+          produto.link
+          ? `<p>
+               <a href="${produto.link}"
+                  target="_blank">
+                  🔗 Ver produto
+               </a>
+             </p>`
+          : ""
+        }
+
+        <button
+          class="excluir"
+          onclick="excluirProduto(${produto.id})">
+          🗑️ EXCLUIR
+        </button>
+      `;
+
+      lista.appendChild(item);
+
+    });
+
+  } catch (erro) {
+
+    lista.innerHTML =
+      "🔴 Erro ao carregar produtos.";
+
+  }
+}
+
+
+async function adicionarProduto() {
+
+  const nome = document.getElementById("nome").value.trim();
+
+  const preco = document.getElementById("preco").value;
+
+  const categoria =
+    document.getElementById("categoria").value.trim();
+
+  const link =
+    document.getElementById("link").value.trim();
+
+  const comissao =
+    document.getElementById("comissao").value;
+
+  if (!nome || !preco) {
+
+    alert("Digite pelo menos o nome e o preço.");
+
+    return;
+  }
+
+  try {
+
+    const resposta = await fetch("/api/produtos", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+
+        nome: nome,
+        preco: Number(preco),
+        categoria: categoria,
+        link: link,
+        comissao: Number(comissao || 0),
+        destaque: false
+
+      })
+
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+
+      alert(dados.mensagem || "Erro ao adicionar produto.");
+
+      return;
+    }
+
+    alert("✅ Produto adicionado com sucesso!");
+
+    document.getElementById("nome").value = "";
+    document.getElementById("preco").value = "";
+    document.getElementById("categoria").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("comissao").value = "";
+
+    carregarProdutos();
+
+  } catch (erro) {
+
+    alert("🔴 Não foi possível adicionar o produto.");
+
+  }
+}
+
+
+async function excluirProduto(id) {
+
+  const confirmar =
+    confirm("Deseja realmente excluir este produto?");
+
+  if (!confirmar) {
+    return;
+  }
+
+  try {
+
+    const resposta =
+      await fetch(`/api/produtos/${id}`, {
+
+        method: "DELETE"
+
+      });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+
+      alert(dados.mensagem || "Erro ao excluir.");
+
+      return;
+    }
+
+    alert("🗑️ Produto excluído!");
+
+    carregarProdutos();
+
+  } catch (erro) {
+
+    alert("🔴 Erro ao excluir produto.");
+
+  }
+}
+
+
+carregarProdutos();
+
+</script>
 
 </body>
 </html>
