@@ -49,8 +49,7 @@
       text-align: center;
     }
 
-    input,
-    select {
+    input {
       width: 100%;
       box-sizing: border-box;
       padding: 13px;
@@ -88,8 +87,13 @@
       margin-top: 12px;
     }
 
-    .produto h3 {
-      margin-top: 0;
+    .produto img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #f5f5f5;
+      margin-bottom: 10px;
     }
 
     .preco {
@@ -155,6 +159,12 @@
       id="link"
       type="url"
       placeholder="Link da Shopee"
+    >
+
+    <input
+      id="imagem"
+      type="url"
+      placeholder="Link da imagem do produto"
     >
 
     <input
@@ -248,6 +258,13 @@ async function carregarProdutos() {
       item.className = "produto";
 
       item.innerHTML = `
+
+        ${
+          produto.imagem
+          ? `<img src="${produto.imagem}" alt="${produto.nome}">`
+          : ""
+        }
+
         <h3>${produto.nome}</h3>
 
         <p>Categoria: ${produto.categoria}</p>
@@ -280,6 +297,7 @@ async function carregarProdutos() {
           onclick="excluirProduto(${produto.id})">
           🗑️ EXCLUIR
         </button>
+
       `;
 
       lista.appendChild(item);
@@ -297,15 +315,20 @@ async function carregarProdutos() {
 
 async function adicionarProduto() {
 
-  const nome = document.getElementById("nome").value.trim();
+  const nome =
+    document.getElementById("nome").value.trim();
 
-  const preco = document.getElementById("preco").value;
+  const preco =
+    document.getElementById("preco").value;
 
   const categoria =
     document.getElementById("categoria").value.trim();
 
   const link =
     document.getElementById("link").value.trim();
+
+  const imagem =
+    document.getElementById("imagem").value.trim();
 
   const comissao =
     document.getElementById("comissao").value;
@@ -333,6 +356,7 @@ async function adicionarProduto() {
         preco: Number(preco),
         categoria: categoria,
         link: link,
+        imagem: imagem,
         comissao: Number(comissao || 0),
         destaque: false
 
@@ -344,7 +368,10 @@ async function adicionarProduto() {
 
     if (!resposta.ok) {
 
-      alert(dados.mensagem || "Erro ao adicionar produto.");
+      alert(
+        dados.mensagem ||
+        "Erro ao adicionar produto."
+      );
 
       return;
     }
@@ -355,13 +382,16 @@ async function adicionarProduto() {
     document.getElementById("preco").value = "";
     document.getElementById("categoria").value = "";
     document.getElementById("link").value = "";
+    document.getElementById("imagem").value = "";
     document.getElementById("comissao").value = "";
 
     carregarProdutos();
 
   } catch (erro) {
 
-    alert("🔴 Não foi possível adicionar o produto.");
+    alert(
+      "🔴 Não foi possível adicionar o produto."
+    );
 
   }
 }
@@ -370,7 +400,9 @@ async function adicionarProduto() {
 async function excluirProduto(id) {
 
   const confirmar =
-    confirm("Deseja realmente excluir este produto?");
+    confirm(
+      "Deseja realmente excluir este produto?"
+    );
 
   if (!confirmar) {
     return;
@@ -379,17 +411,21 @@ async function excluirProduto(id) {
   try {
 
     const resposta =
-      await fetch(`/api/produtos/${id}`, {
-
-        method: "DELETE"
-
-      });
+      await fetch(
+        `/api/produtos/${id}`,
+        {
+          method: "DELETE"
+        }
+      );
 
     const dados = await resposta.json();
 
     if (!resposta.ok) {
 
-      alert(dados.mensagem || "Erro ao excluir.");
+      alert(
+        dados.mensagem ||
+        "Erro ao excluir."
+      );
 
       return;
     }
