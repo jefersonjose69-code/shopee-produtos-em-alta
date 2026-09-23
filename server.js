@@ -1,22 +1,30 @@
 const express = require("express");
-const cors = require("cors");
+const path = require("path");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
-
-// Permite abrir o painel pelo navegador
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
 app.get("/api/status", (req, res) => {
   res.json({
-    online: true,
-    sistema: "Shopee Produtos em Alta"
+    sucesso: true,
+    servidor: "online",
+    mensagem: "Servidor funcionando corretamente"
   });
 });
 
-const PORT = process.env.PORT || 10000;
+app.get("/api/produtos", (req, res) => {
+  res.json({
+    sucesso: true,
+    produtos: []
+  });
+});
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${PORT}`);
